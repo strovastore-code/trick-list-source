@@ -65,15 +65,47 @@ function renderTricks() {
         return;
     }
     
-    trickList.innerHTML = tricks.map(trick => `
-        <li class="trick-item ${trick.completed ? 'completed' : ''}" data-id="${trick.id}">
-            <span class="trick-text" onclick="toggleTrick(${trick.id})">${trick.text}</span>
-            <div class="trick-actions">
-                <button class="delete-btn" onclick="deleteTrick(${trick.id})">Delete</button>
-            </div>
-        </li>
-    `).join('');
+    // Clear the list first
+    trickList.innerHTML = '';
+    
+    // Create elements programmatically to avoid XSS
+    tricks.forEach(trick => {
+        const li = document.createElement('li');
+        li.className = `trick-item ${trick.completed ? 'completed' : ''}`;
+        li.setAttribute('data-id', trick.id);
+        
+        const span = document.createElement('span');
+        span.className = 'trick-text';
+        span.textContent = trick.text; // Use textContent to prevent XSS
+        span.style.cursor = 'pointer';
+        
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'trick-actions';
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = 'Delete';
+        
+        actionsDiv.appendChild(deleteBtn);
+        li.appendChild(span);
+        li.appendChild(actionsDiv);
+        trickList.appendChild(li);
+    });
 }
+
+// Event delegation for trick list
+trickList.addEventListener('click', (e) => {
+    const trickItem = e.target.closest('.trick-item');
+    if (!trickItem) return;
+    
+    const trickId = parseInt(trickItem.getAttribute('data-id'));
+    
+    if (e.target.classList.contains('delete-btn')) {
+        deleteTrick(trickId);
+    } else if (e.target.classList.contains('trick-text')) {
+        toggleTrick(trickId);
+    }
+});
 
 function saveTricks() {
     localStorage.setItem('tricks', JSON.stringify(tricks));
