@@ -1,5 +1,6 @@
 // Trick List Application
 let tricks = [];
+let nextId = Date.now(); // Start with timestamp, then increment
 
 // DOM Elements
 const trickInput = document.getElementById('trickInput');
@@ -29,7 +30,7 @@ function addTrick() {
     }
     
     const trick = {
-        id: Date.now(),
+        id: nextId++,
         text: trickText,
         completed: false
     };
@@ -61,7 +62,12 @@ function toggleTrick(id) {
 
 function renderTricks() {
     if (tricks.length === 0) {
-        trickList.innerHTML = '<li class="empty-state">No tricks yet. Add your first trick!</li>';
+        // Use DOM manipulation for consistency
+        trickList.innerHTML = '';
+        const li = document.createElement('li');
+        li.className = 'empty-state';
+        li.textContent = 'No tricks yet. Add your first trick!';
+        trickList.appendChild(li);
         return;
     }
     
@@ -114,6 +120,15 @@ function saveTricks() {
 function loadTricks() {
     const storedTricks = localStorage.getItem('tricks');
     if (storedTricks) {
-        tricks = JSON.parse(storedTricks);
+        try {
+            tricks = JSON.parse(storedTricks);
+            // Update nextId to be higher than any existing ID
+            if (tricks.length > 0) {
+                nextId = Math.max(...tricks.map(t => t.id)) + 1;
+            }
+        } catch (error) {
+            console.error('Failed to parse stored tricks:', error);
+            tricks = [];
+        }
     }
 }
